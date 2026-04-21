@@ -1,12 +1,13 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using _02_Scripts.Weapon;
 using UnityEngine;
 using UnityEngine.AI;
 
 
 //몬스터 컨트롤러
-public class MonsterController : MonoBehaviour
+public class MonsterController : MonoBehaviour,IDamageable
 {
     //몬스터 상태 정의
     public enum MonsterState
@@ -44,6 +45,9 @@ public class MonsterController : MonoBehaviour
     {
         //이벤트구독(subscribe)
         PlayerController.OnPlayerDead += OnPlayerDead;
+        
+        StartCoroutine(CheckMonsterState());
+        StartCoroutine(MonsterAction());
     }
 
     private void OnDisable()
@@ -69,9 +73,6 @@ public class MonsterController : MonoBehaviour
         
         //Collider Component 추출후 리스트에 저장.
         _monsterTransform.GetComponentsInChildren<Collider>(_mColliders);
-
-        StartCoroutine(CheckMonsterState());
-        StartCoroutine(MonsterAction());
     }
 
     //코루틴1 - 몬스터의 상태갱신
@@ -140,7 +141,16 @@ public class MonsterController : MonoBehaviour
                     _navMeshAgent.isStopped = true;
                     _animator.SetTrigger(hashDead);
                     ToggleColliders(false);
-                    //TODO: 오브젝트 풀로 반환.
+                    //잠시 기다린 후에
+                    yield return new WaitForSeconds(2f);
+                    //각종 수치 초기화
+                    _monsterHP = 100f;
+                    _monsterState = MonsterState.IDLE;
+                    _isDead = false;
+                    ToggleColliders(true);
+                    //오브젝트 풀로 반환.
+                    MonsterPool.Instance.monsterPool.Release(this);
+                    
                     break;
             }
 
@@ -153,21 +163,26 @@ public class MonsterController : MonoBehaviour
     {
         if (!_isDead && other.collider.CompareTag("Bullet"))
         {
-            Destroy(other.gameObject);
-            _animator.SetTrigger(hashHit);
-            _monsterHP -= 10.0f;
+            BulletPool.Instance.Return(other.gameObject.GetComponent<Bullet>());
+            //Destroy(other.gameObject);
+        }
+    }
+    
+    public void TakeDamage(int damage)
+    {
+        _animator.SetTrigger(hashHit);
+        _monsterHP -= (float)damage;
             
-            if (_monsterHP <= 0f)
-            {
-                _monsterState = MonsterState.DEAD;
-            }
+        if (_monsterHP <= 0f)
+        {
+            _monsterState = MonsterState.DEAD;
         }
     }
 
     private void ToggleColliders(bool active)
     {
         //TODO: 오류수정
-        foreach (var coll in _mColliders )
+        foreach (var coll in _mColliders)
         {
             coll.enabled = active;
         }
@@ -185,4 +200,6 @@ public class MonsterController : MonoBehaviour
         
         StopAllCoroutines();
     }
+
+    
 }

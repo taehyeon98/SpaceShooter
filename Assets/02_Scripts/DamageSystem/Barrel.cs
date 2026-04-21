@@ -1,9 +1,10 @@
 using System;
+using _02_Scripts.Weapon;
 using Unity.Cinemachine;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-public class Barrel : MonoBehaviour
+public class Barrel : MonoBehaviour,IDamageable
 {
     //스크립터블오브젝트 참조
     [SerializeField] private BarrelDataSO _barrelData;
@@ -26,18 +27,13 @@ public class Barrel : MonoBehaviour
         _impulseSource = GetComponent<CinemachineImpulseSource>();
     }
 
-    private void OnCollisionEnter(Collision other)
+    /*private void OnCollisionEnter(Collision other)
     {
         if (other.collider.CompareTag(Tag_Bullet))
         {
-            _hitCount++;
-            if (_hitCount == 3)
-            {
-                //폭발효과 연출
-                ExpBarrel();
-            }
+            
         }
-    }
+    }*/
 
     private void ExpBarrel()
     {
@@ -65,5 +61,15 @@ public class Barrel : MonoBehaviour
         
         Destroy(effect, 5f);
         Destroy(gameObject, 1.5f);
+    }
+
+    public void TakeDamage(int damage)
+    {
+        _hitCount++;
+        if (_hitCount == 3)
+        {
+            //폭발효과 연출
+            ExpBarrel();
+        }
     }
 }

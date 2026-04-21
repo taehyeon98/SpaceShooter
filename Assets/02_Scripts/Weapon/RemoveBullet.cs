@@ -24,8 +24,10 @@ public class RemoveBullet : MonoBehaviour
             GameObject spark = Instantiate(_sparkEffect,point,rot);
             Destroy(spark, 0.5f);
             
+            //TODO:풀에 반환
+            BulletPool.Instance.Return(other.gameObject.GetComponent<Bullet>());
             //충돌한 게임오브젝트 
-            Destroy(other.gameObject);
+            //Destroy(other.gameObject);
             //스크립트 삭제
             //Destroy(this);
             //스크립트가 들어가있는 오브젝트 삭제

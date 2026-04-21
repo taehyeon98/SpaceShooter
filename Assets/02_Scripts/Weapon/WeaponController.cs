@@ -1,5 +1,5 @@
 using System.Collections;
-
+using _02_Scripts.Weapon;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using Random = UnityEngine.Random;
@@ -12,13 +12,13 @@ public class WeaponController : MonoBehaviour
     [SerializeField] private GameObject _bulletPrefab;
     [SerializeField] private AudioClip _fireSfx;
     [SerializeField] private MeshRenderer _muzzleFlash;
-    
+    [SerializeField] private LayerMask _fireMask;
     
     //연사속도
     [SerializeField] private float _fireRate = 0.1f;
     //다음 발사 시각
     private float _nextFire;
-    
+
     private AudioSource _audio;
 
     private void Start()
@@ -41,6 +41,8 @@ public class WeaponController : MonoBehaviour
     private void Update()
     {
         FireBullet();
+        Debug.DrawRay(_firePos.position, _firePos.forward * 10f,Color.green);
+         
     }
 
     private void FireBullet()
@@ -71,33 +73,24 @@ public class WeaponController : MonoBehaviour
             if (Time.time > _nextFire)
             { 
                 _nextFire = Time.time + _fireRate;
-                Instantiate(_bulletPrefab, _firePos.position, _firePos.rotation);
+                
+                //풀에서 사용가능한 총알 꺼내오기
+                //var bullet = BulletPool.Instance.Get();
+                //bullet.Fire(_firePos.position, _firePos.rotation);
+                
+                //Instantiate(_bulletPrefab, _firePos.position, _firePos.rotation);
                 _audio.PlayOneShot(_fireSfx,0.8f);
                 StartCoroutine(ShowMuzzleFlash());
+                
+                if (Physics.Raycast(_firePos.position, _firePos.forward, out RaycastHit hit, 10f,_fireMask))
+                {
+                    Debug.Log(hit.collider.name);
+                    hit.collider.GetComponent<IDamageable>()?.TakeDamage(25);
+                }
             }
         }
     }
 
-    /*
-     * 동기방식(sync)
-     * 함수 1 (5초)
-     * 함수 2 (1초)
-     * 순서대로 함수1 실행 후 함수 2 실행
-     *
-     * 비동기방식(async)
-     * 함수 1 (5초)
-     * 함수 2 (1초_
-     * 함수1,함수2가 실행된다.
-     *
-     *
-     * 대표적 = Thread
-     * 여러개가 한번에 도는방식 = multiThread
-     * 1. Thread 프로그래밍
-     * 2. async / await / Task
-     * 3. Co-routine
-     * 코루틴 != 멀티쓰레드
-     * 
-     */
     
     
     private IEnumerator ShowMuzzleFlash()
@@ -124,3 +117,23 @@ public class WeaponController : MonoBehaviour
         _muzzleFlash.enabled = false;
     }
 }
+    /*
+     * 동기방식(sync)
+     * 함수 1 (5초)
+     * 함수 2 (1초)
+     * 순서대로 함수1 실행 후 함수 2 실행
+     *
+     * 비동기방식(async)
+     * 함수 1 (5초)
+     * 함수 2 (1초_
+     * 함수1,함수2가 실행된다.
+     *
+     *
+     * 대표적 = Thread
+     * 여러개가 한번에 도는방식 = multiThread
+     * 1. Thread 프로그래밍
+     * 2. async / await / Task
+     * 3. Co-routine
+     * 코루틴 != 멀티쓰레드
+     * 
+     */
