@@ -21,21 +21,23 @@ public class PlayerController : MonoBehaviour
 
     private float _initHP = 100f;
     private float _currHP = 100f;
-    
+
+    [SerializeField] private InputEventSO _inputEventSO;
+
     //delegate = 함수를 저장하기 위한 데이터를 정의
     //public void Sum();
     //delegate 변수명 = sum;
     //delegate SumDelegate = sum;
-    
+
     //Delegate선언
     //public delegat 함수명;
     //public delegate void PlayerDieHandler();
     //delegate정의
     //public static event PlayerDieHandler OnPlayerDead;
-    
+
     //Action : .NET 미리 정의된 델리게이트
     public static event Action OnPlayerDead;
-    
+
     //public static event Action<T1,T2,...,T16> 
 
     //OnPlayerDead = PlayerDead();
@@ -44,6 +46,19 @@ public class PlayerController : MonoBehaviour
 
     #region 유니티 콜백 메서드
 
+    private void OnEnable()
+    {
+        _inputEventSO.SubscribeMove(OnMoveInput);
+        _inputEventSO.SubscribeLook(OnLookInput);
+    }
+
+    private void OnDisable()
+    {
+        _inputEventSO.UnsubscribeMove(OnMoveInput);
+        _inputEventSO.UnsubscribeLook(OnLookInput);
+    }
+
+
     private void Start()
     {
         _animator = GetComponent<Animator>();
@@ -51,7 +66,6 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
-        InputHandler();
         Movement();
         Animate();
     }
@@ -76,7 +90,7 @@ public class PlayerController : MonoBehaviour
     }
 
     private void PlayerDamaged(float Damage)
-    { 
+    {
         _currHP -= Damage;
         //_hpBar.fillAmount = _currHP/_initHP;
         if (_currHP <= 0f)
@@ -84,9 +98,14 @@ public class PlayerController : MonoBehaviour
             //캐릭터 사망
             Debug.Log("사망.");
             //PlayerDead();
-            
+
             //이벤트 발행(Event Raise)
             OnPlayerDead?.Invoke();
+
+            //GameManager의 IsGameOver변경.
+            Manager.Instance.IsGameOver = true;
+
+
         }
     }
 
@@ -105,14 +124,15 @@ public class PlayerController : MonoBehaviour
 
     #region 입력처리
 
-    private void InputHandler()
+    private void OnMoveInput(Vector2 input)
     {
-        //Legacy Input System
-        v = Input.GetAxis("Vertical");
-        h = Input.GetAxis("Horizontal");
-        r = Input.GetAxis("Mouse X");
+        v = input.y;
+        h = input.x;
+    }
 
-        //New InputSystem
+    private void OnLookInput(Vector2 input)
+    {
+        r = input.x * 0.2f;
     }
 
     #endregion

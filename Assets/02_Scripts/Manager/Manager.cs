@@ -11,9 +11,29 @@ public class Manager : MonoBehaviour
     [SerializeField] private List<Transform> _points = new List<Transform>();
     [SerializeField] private GameObject _monsterPrefab;
     [SerializeField] private float _createTime = 3.0f;
+    
+    //필드
+    private bool _isGameOver = false;//camel Case - 변수
+    //프로퍼티-클래스, 메서드
+    public bool IsGameOver
+    {
+        get { return _isGameOver; }
+        set
+        {
+            _isGameOver = value;
+            if (_isGameOver)
+            {
+                //InvokeRepeating으로 호출한 메서드 정지.
+                CancelInvoke(nameof(CreateMonster));
+            }
+        }
+    }
 
     private void Awake()
     {
+        /*bool temp = Manager.Instance.IsGameOver; // getter실행
+        Manager.Instance.IsGameOver = true; // setter실행*/
+        
         if (Instance == null)
         {
             Instance = this;
